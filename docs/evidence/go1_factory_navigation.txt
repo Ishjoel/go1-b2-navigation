@@ -1,8 +1,18 @@
-Go1 MuJoCo factory navigation run — 2026-10-19
+Go1 MuJoCo factory navigation runs — 2026-10-19
 Command: ./scripts/start_demo.sh mujoco_viewer:=false rviz:=false
 Scene: go1_factory.mjb (rebuilt Go1 verified bit-identical to go1_corridor.mjb under the policy)
-Goal: (6.0, 4.5, yaw 3.1416) via main aisle -> east cross aisle -> picking aisle
-lifecycle_guard: "Nav2 bringup healthy"
-Feedback distance: 28.10 m -> 3.97 m over ~37 s of navigation, no recovery behaviours
-Result: SUCCEEDED; final odom (6.59, 4.43)
-Nav2 limits: max_vel_x 0.8 m/s, max_vel_theta 1.0 rad/s
+Goal: (6.5, 8.5, yaw 1.5708) — main aisle -> maze entrance (east) -> four 180° turns
+Nav2 limits: max_vel_x 1.5 m/s, max_vel_theta 1.0 rad/s
+
+Run maze1 (main-aisle pallet at x=8.0, global costmap 1 Hz, inflation 0.55 m)
+  Result SUCCEEDED, ~50 s navigating (61 s from launch), no recovery behaviours
+  Initial planned distance 49.5 m; peak speed (1 s smoothed) 1.29 m/s
+  Body height 0.282-0.323 m (no fall)
+  Closest approach of trunk centre to unmapped obstacles: pallet 0.27 m (too close),
+  cones 1.70, entrance cartons 1.39, cart 1.23, aisle-3 cartons 1.98, aisle-4 cone 1.02 m
+
+Run maze2 (current config: pallet at x=10.0, global costmap 5 Hz, inflation 0.75 m)
+  Result SUCCEEDED, ~44 s navigating, no recovery behaviours, lifecycle_guard: healthy
+  Body height min 0.282 m (no fall)
+  Closest approach: pallet 0.37 m, cones 1.09, entrance cartons 1.20, cart 1.16,
+  aisle-3 cartons 1.87, aisle-4 cone 0.95 m; final odom (6.42, 7.92)
