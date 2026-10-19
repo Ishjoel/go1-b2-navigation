@@ -24,7 +24,7 @@ Start the demo:
 ./scripts/start_demo.sh
 ```
 
-The MuJoCo window opens with a camera following Go1, and RViz shows the map, laser, costmaps, and planned path. About 30 s after start, Go1 automatically walks from `(0, 0)` along the main aisle, turns into the east cross aisle, and drives down the picking aisle to `(6, 4.5)`. On a headless test run it reached the goal in about 37 s. Nav2 caps forward speed at `0.8 m/s` (the policy tracks 0.3–1.0 m/s reliably and has a dead zone below 0.3 m/s).
+The MuJoCo window opens with a camera following Go1, and RViz shows the map, laser, costmaps, and planned path. As soon as Nav2 is active (a few seconds after start), Go1 automatically walks from `(0, 0)` along the main aisle, turns into the east cross aisle, and drives down the picking aisle to `(6, 4.5)`. On a headless test run it reached the goal in about 37 s. Nav2 caps forward speed at `0.8 m/s` (the policy tracks 0.3–1.0 m/s reliably and has a dead zone below 0.3 m/s).
 
 Useful launch options:
 

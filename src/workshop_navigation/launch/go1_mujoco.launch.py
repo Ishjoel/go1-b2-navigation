@@ -87,7 +87,7 @@ def generate_launch_description():
             output="screen",
         ),
         TimerAction(
-            period=5.0,
+            period=2.0,
             actions=[
                 isolated_nav,
                 Node(
@@ -99,7 +99,7 @@ def generate_launch_description():
             ],
         ),
         TimerAction(
-            period=12.0,
+            period=2.0,
             actions=[
                 Node(
                     package="rviz2",
@@ -111,7 +111,7 @@ def generate_launch_description():
             ],
         ),
         TimerAction(
-            period=30.0,
+            period=2.0,
             actions=[
                 Node(
                     package="workshop_navigation",
