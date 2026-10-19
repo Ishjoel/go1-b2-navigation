@@ -2,7 +2,7 @@
 
 The active robot in this workspace is **Unitree Go1**. Locomotion reuses the provided MuJoCo policy weights and observation normalizer; Nav2, AMCL, the workshop runtime watchdog, and RViz provide navigation, localization, safety, and visualization.
 
-The default scene is a **factory hall** (24 m × 15 m): pallet racking with a picking aisle, a conveyor line, three machining cells, a forklift, loading doors, and painted aisle markings. The MuJoCo scene and the Nav2 map are generated from the same collision geometry. The earlier S-shaped maze is still available with `world:=maze`. Go2/CHAMP/ANYmal sources remain only as disabled upstream reference material.
+The default scene is a **factory hall** (27 m × 18 m): a serpentine pallet-rack maze (four 180° turns, 3 m aisles), unmapped clutter (cartons, a cart, cones) for local avoidance, a conveyor line, three machining cells, a forklift, loading doors, and painted aisle markings. The MuJoCo scene and the Nav2 map are generated from the same collision geometry. The earlier S-shaped maze is still available with `world:=maze`. Go2/CHAMP/ANYmal sources remain only as disabled upstream reference material.
 
 ![Factory overview](docs/go1_factory_overview.png)
 
@@ -24,7 +24,7 @@ Start the demo:
 ./scripts/start_demo.sh
 ```
 
-The MuJoCo window opens with a camera following Go1, and RViz shows the map, laser, costmaps, and planned path. As soon as Nav2 is active (a few seconds after start), Go1 automatically walks from `(0, 0)` along the main aisle, turns into the east cross aisle, and drives down the picking aisle to `(6, 4.5)`. On a headless test run it reached the goal in about 37 s. Nav2 caps forward speed at `0.8 m/s` (the policy tracks 0.3–1.0 m/s reliably and has a dead zone below 0.3 m/s).
+The MuJoCo window opens with a camera following Go1, and RViz shows the map, laser, costmaps, and planned path. As soon as Nav2 is active (a few seconds after start), Go1 automatically walks from `(0, 0)` along the main aisle, enters the rack maze at its east end, and snakes through it to `(6.5, 8.5)`. Headless test runs reached the goal in 44–50 s of navigation. Nav2 caps forward speed at `1.5 m/s` (the policy tracks 0.3–1.0 m/s reliably and has a dead zone below 0.3 m/s).
 
 Useful launch options:
 

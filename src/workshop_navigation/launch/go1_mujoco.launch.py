@@ -55,9 +55,9 @@ def generate_launch_description():
         DeclareLaunchArgument("auto_goal", default_value="true"),
         DeclareLaunchArgument("map", default_value=map_file),
         DeclareLaunchArgument("scene", default_value=scene_file),
-        DeclareLaunchArgument("goal_x", default_value=PythonExpression(["'6.0' if ", *is_factory, " else '14.0'"])),
-        DeclareLaunchArgument("goal_y", default_value=PythonExpression(["'4.5' if ", *is_factory, " else '0.0'"])),
-        DeclareLaunchArgument("goal_yaw", default_value=PythonExpression(["'3.1416' if ", *is_factory, " else '0.0'"])),
+        DeclareLaunchArgument("goal_x", default_value=PythonExpression(["'6.5' if ", *is_factory, " else '14.0'"])),
+        DeclareLaunchArgument("goal_y", default_value=PythonExpression(["'8.5' if ", *is_factory, " else '0.0'"])),
+        DeclareLaunchArgument("goal_yaw", default_value=PythonExpression(["'1.5708' if ", *is_factory, " else '0.0'"])),
         Node(
             package="go1_mujoco_locomotion",
             executable="locomotion_node",
@@ -69,6 +69,9 @@ def generate_launch_description():
                     "cmd_vel_topic": "/cmd_vel_safe",
                     "scene": LaunchConfiguration("scene"),
                     "publish_tf": False,
+                    # Verified stable up to 1.5 m/s on the flat factory floor
+                    # (straight, turning, and stop/turn/go sequences).
+                    "max_linear_x": 1.5,
                     # A Python MuJoCo ray per beam is expensive; 90 beams at
                     # 10 Hz retain useful aisle coverage without starving the
                     # 50 Hz locomotion policy or Nav2 callbacks.

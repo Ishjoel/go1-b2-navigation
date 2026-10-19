@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Rasterize the Go1 MuJoCo factory scene into a Nav2 occupancy map.
 
-Only geom group 0 (static obstacles) is rasterized; floor markings and lamps
-live in group 1 so painted lines never become obstacles.
+Only geom group 0 (static obstacles) is rasterized. Floor markings and lamps
+(group 1) never become obstacles, and the deliberately unmapped clutter
+(group 2) is left for the laser and local costmap to discover.
 """
 from pathlib import Path
 
@@ -14,9 +15,9 @@ model_path = workspace / "go1_mujoco_locomotion/config/go1_factory.mjb"
 output = Path(__file__).resolve().parents[1] / "maps"
 name = "go1_factory"
 resolution = 0.05
-x_min, x_max = -4.0, 22.0
-y_min, y_max = -8.5, 8.5
-hall_x, hall_y = (-3.0, 21.0), (-7.5, 7.5)
+x_min, x_max = -4.0, 25.0
+y_min, y_max = -9.0, 11.0
+hall_x, hall_y = (-3.0, 24.0), (-8.0, 10.0)
 width = round((x_max - x_min) / resolution)
 height = round((y_max - y_min) / resolution)
 

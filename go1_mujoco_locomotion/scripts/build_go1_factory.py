@@ -10,6 +10,8 @@ trained policy, then adds a warehouse/factory hall around it.
 Geom groups:
   0  static obstacles: seen by the 2D laser and rasterized into the Nav2 map
   1  decoration (floor markings, lamps): no collision, excluded from the map
+  2  unmapped obstacles (dropped cartons, carts, cones): collide, are seen
+     by the laser but are NOT in the Nav2 map, so local avoidance must react
 """
 import argparse
 from pathlib import Path
@@ -23,8 +25,8 @@ source = config / "go1_corridor.mjb"
 target = config / "go1_factory.mjb"
 
 OBJ = mujoco.mjtObj
-HALL_X = (-3.0, 21.0)
-HALL_Y = (-7.5, 7.5)
+HALL_X = (-3.0, 24.0)
+HALL_Y = (-8.0, 10.0)
 WALL_H = 2.8          # keep below the map rasterizer's 3 m ray origin
 
 
@@ -198,26 +200,27 @@ class Factory:
         ):
             spec.add_material(name=name, rgba=rgba, **kw)
 
-    def box(self, center, half, material, solid=True, quat=None):
+    @staticmethod
+    def _flags(solid, mapped):
+        if not solid:
+            return dict(contype=0, conaffinity=0, group=1)
+        # Same contact flags as the original walls: obstacle for laser and feet.
+        return dict(contype=1, conaffinity=0, group=0 if mapped else 2)
+
+    def box(self, center, half, material, solid=True, quat=None, mapped=True):
         self.n += 1
         kw = dict(name=f"f{self.n}", type=mujoco.mjtGeom.mjGEOM_BOX, pos=list(center),
-                  size=list(half), material=material)
+                  size=list(half), material=material, **self._flags(solid, mapped))
         if quat is not None:
             kw["quat"] = quat
-        if solid:      # same flags as the original walls: obstacle for laser/map/feet
-            kw.update(contype=1, conaffinity=0, group=0)
-        else:
-            kw.update(contype=0, conaffinity=0, group=1)
         self.world.add_geom(**kw)
 
-    def cyl(self, center, radius, half_len, material, solid=True, quat=None):
+    def cyl(self, center, radius, half_len, material, solid=True, quat=None, mapped=True):
         self.n += 1
         kw = dict(name=f"f{self.n}", type=mujoco.mjtGeom.mjGEOM_CYLINDER, pos=list(center),
-                  size=[radius, half_len, 0], material=material)
+                  size=[radius, half_len, 0], material=material, **self._flags(solid, mapped))
         if quat is not None:
             kw["quat"] = quat
-        kw.update(dict(contype=1, conaffinity=0, group=0) if solid
-                  else dict(contype=0, conaffinity=0, group=1))
         self.world.add_geom(**kw)
 
     def floor_line(self, x0, y0, x1, y1, material="yellow", width=0.1):
@@ -254,10 +257,13 @@ class Factory:
             self.box(((x0 + x1) / 2, y, 0.6), ((x1 - x0) / 2, 0.01, 0.6), "wall_band", solid=False)
         for x in (x0 + 0.005, x1 - 0.005):
             self.box((x, (y0 + y1) / 2, 0.6), (0.01, (y1 - y0) / 2, 0.6), "wall_band", solid=False)
-        for x in np.arange(x0 + 3, x1, 6.0):
-            for y in (y0 + 0.2, y1 - 0.2):
-                self.box((x, y, h), (0.2, 0.2, h), "pillar")
-                self.box((x, y, 0.35), (0.22, 0.22, 0.35), "yellow", solid=False)
+        # Columns: south wall every 6 m; north wall only where a rack row
+        # meets it, so no column narrows a maze turn.
+        columns = [(x, y0 + 0.2) for x in np.arange(x0 + 3, x1, 6.0)]
+        columns += [(x, y1 - 0.2) for x in (-0.5, 4.5, 8.5, 16.5)]
+        for x, y in columns:
+            self.box((x, y, h), (0.2, 0.2, h), "pillar")
+            self.box((x, y, 0.35), (0.22, 0.22, 0.35), "yellow", solid=False)
         # Roll-up loading doors on the west wall.
         for y in (-4.5, 4.5):
             self.box((x0 + 0.02, y, 1.3), (0.02, 1.4, 1.3), "door", solid=False)
@@ -265,9 +271,9 @@ class Factory:
                 self.box((x0 + 0.045, y, 0.1 + k * 0.2), (0.005, 1.4, 0.01), "steel", solid=False)
             self.hazard_frame(x0 + 0.05, y - 1.5, x0 + 1.2, y + 1.5)
 
-    def pallet(self, x, y, layers=2, yaw90=False, wrapped=False):
+    def pallet(self, x, y, layers=2, yaw90=False, wrapped=False, mapped=True):
         hx, hy = (0.6, 0.5) if not yaw90 else (0.5, 0.6)
-        self.box((x, y, 0.07), (hx, hy, 0.07), "pallet")
+        self.box((x, y, 0.07), (hx, hy, 0.07), "pallet", mapped=mapped)
         z = 0.14
         rng = np.random.default_rng(int(abs(x * 31 + y * 17)))
         for layer in range(layers):
@@ -275,39 +281,77 @@ class Factory:
                 for iy in (-1, 1):
                     mat = "carton" if rng.random() > 0.35 else "carton_dark"
                     self.box((x + ix * hx / 2, y + iy * hy / 2, z + 0.2),
-                             (hx / 2 - 0.015, hy / 2 - 0.015, 0.2 - 0.005), mat)
+                             (hx / 2 - 0.015, hy / 2 - 0.015, 0.2 - 0.005), mat, mapped=mapped)
             z += 0.4
         if wrapped:
             self.box((x, y, 0.14 + layers * 0.2), (hx + 0.01, hy + 0.01, layers * 0.2), "wrap",
                      solid=False)
 
-    def rack_row(self, x0, x1, yc, depth=1.0, levels=(0.0, 0.85, 1.7), height=2.6):
-        """Pallet racking along x, solid enough for the laser from the aisle side."""
-        hy = depth / 2
-        bays = int(round((x1 - x0) / 2.7))
-        bw = (x1 - x0) / bays
+    def rack(self, a0, a1, c, axis="x", depth=1.0, levels=(0.0, 0.85, 1.7), height=2.6):
+        """Pallet racking from a0 to a1 along ``axis`` centred on c across it."""
+        def at(a, b, z):
+            return (a, b, z) if axis == "x" else (b, a, z)
+
+        def half(ha, hb, hz):
+            return (ha, hb, hz) if axis == "x" else (hb, ha, hz)
+
+        hc = depth / 2
+        bays = max(1, int(round((a1 - a0) / 2.7)))
+        bw = (a1 - a0) / bays
         # Continuous kick plate so laser and map both see one clean footprint.
-        self.box(((x0 + x1) / 2, yc, 0.08), ((x1 - x0) / 2, hy, 0.08), "steel")
+        self.box(at((a0 + a1) / 2, c, 0.08), half((a1 - a0) / 2, hc, 0.08), "steel")
         for b in range(bays + 1):
-            x = x0 + b * bw
-            for y in (yc - hy + 0.04, yc + hy - 0.04):
-                self.box((x, y, height / 2), (0.04, 0.04, height / 2), "rack_upright")
+            for side in (c - hc + 0.04, c + hc - 0.04):
+                self.box(at(a0 + b * bw, side, height / 2), (0.04, 0.04, height / 2),
+                         "rack_upright")
         for lvl in levels[1:] + (height - 0.05,):
-            for y in (yc - hy + 0.04, yc + hy - 0.04):
-                self.box(((x0 + x1) / 2, y, lvl), ((x1 - x0) / 2, 0.03, 0.05), "rack_beam")
-        rng = np.random.default_rng(int(x0 * 13 + yc * 7 + 101))
+            for side in (c - hc + 0.04, c + hc - 0.04):
+                self.box(at((a0 + a1) / 2, side, lvl), half((a1 - a0) / 2, 0.03, 0.05),
+                         "rack_beam")
+        rng = np.random.default_rng(int(a0 * 13 + c * 7 + 101))
         for b in range(bays):
-            bx = x0 + (b + 0.5) * bw
+            ba = a0 + (b + 0.5) * bw
             for lvl in levels:
                 base = lvl + (0.16 if lvl == 0 else 0.05)
                 for k in (-1, 0, 1):
                     if lvl > 0 and rng.random() < 0.18:
                         continue           # an empty slot here and there looks real
-                    px = bx + k * bw / 3
-                    self.box((px, yc, base + 0.06), (bw / 6 - 0.06, hy - 0.08, 0.06), "pallet")
+                    pa = ba + k * bw / 3
+                    self.box(at(pa, c, base + 0.06), half(bw / 6 - 0.06, hc - 0.08, 0.06),
+                             "pallet")
                     hgt = 0.28 + 0.06 * rng.random()
                     mat = "carton" if rng.random() > 0.4 else "carton_dark"
-                    self.box((px, yc, base + 0.12 + hgt), (bw / 6 - 0.1, hy - 0.12, hgt), mat)
+                    self.box(at(pa, c, base + 0.12 + hgt), half(bw / 6 - 0.1, hc - 0.12, hgt),
+                             mat)
+        # Yellow floor line along each aisle-facing side.
+        for side in (c - hc - 0.15, c + hc + 0.15):
+            if axis == "x":
+                self.floor_line(a0, side, a1, side, "yellow", 0.08)
+            else:
+                self.floor_line(side, a0, side, a1, "yellow", 0.08)
+
+    # -- unmapped clutter for local avoidance ---------------------------------
+    def dropped_cartons(self, x, y):
+        self.box((x, y, 0.07), (0.35, 0.35, 0.07), "pallet", mapped=False)
+        self.box((x - 0.05, y, 0.39), (0.3, 0.3, 0.25), "carton", mapped=False)
+        self.box((x + 0.05, y + 0.02, 0.86), (0.24, 0.22, 0.22), "carton_dark", mapped=False,
+                 quat=[0.966, 0, 0, 0.259])
+
+    def cart(self, x, y, along_y=True):
+        hx, hy = (0.3, 0.5) if along_y else (0.5, 0.3)
+        self.box((x, y, 0.75), (hx, hy, 0.02), "steel", mapped=False)
+        self.box((x, y, 0.35), (hx - 0.03, hy - 0.03, 0.02), "steel", mapped=False)
+        self.box((x, y, 0.55), (hx - 0.04, hy - 0.04, 0.18), "carton", mapped=False)
+        for dx in (-hx + 0.03, hx - 0.03):
+            for dy in (-hy + 0.03, hy - 0.03):
+                self.box((x + dx, y + dy, 0.42), (0.02, 0.02, 0.36), "black", mapped=False)
+        self.box((x, y + (hy if along_y else 0), 1.0) if along_y else (x + hx, y, 1.0),
+                 (hx, 0.02, 0.02) if along_y else (0.02, hy, 0.02), "red", mapped=False)
+
+    def cone(self, x, y):
+        self.cyl((x, y, 0.02), 0.2, 0.02, "black", mapped=False)
+        self.cyl((x, y, 0.37), 0.13, 0.33, "red", mapped=False)
+        self.cyl((x, y, 0.5), 0.135, 0.05, "white", solid=False)
 
     def conveyor(self, x0, x1, yc, width=0.8, height=0.8):
         hy = width / 2
@@ -370,66 +414,70 @@ class Factory:
 
     def lamps(self):
         for x in np.arange(HALL_X[0] + 3, HALL_X[1], 6.0):
-            for y in (-4.0, 0.0, 4.0):
+            for y in (-5.0, 0.0, 5.0):
                 self.box((x, y, 4.2), (0.8, 0.12, 0.04), "lamp", solid=False)
         spec = self.spec
-        for x in (2.0, 9.0, 16.0):
+        for x in (2.0, 11.0, 20.0):
             spec.worldbody.add_light(name=f"bay_light_{x:.0f}", pos=[x, 0, 7.5],
-                                     dir=[0, 0, -1], type=mujoco.mjtLightType.mjLIGHT_SPOT, castshadow=int(x == 9.0),
+                                     dir=[0, 0, -1], type=mujoco.mjtLightType.mjLIGHT_SPOT, castshadow=int(x == 11.0),
                                      diffuse=[0.45, 0.45, 0.42], specular=[0.15, 0.15, 0.15],
                                      cutoff=75, exponent=4, attenuation=[1, 0, 0])
-        spec.worldbody.add_light(name="sun", pos=[9, 0, 12], dir=[0.2, 0.25, -1],
+        spec.worldbody.add_light(name="sun", pos=[10.5, 1, 12], dir=[0.2, 0.25, -1],
                                  type=mujoco.mjtLightType.mjLIGHT_DIRECTIONAL, castshadow=1,
                                  diffuse=[0.35, 0.35, 0.33], specular=[0.1, 0.1, 0.1])
 
     def build(self):
         self.walls()
-        # North storage block: two rack rows with a 3 m picking aisle between
-        # them, closed on the west by a cross rack so the aisle is entered
-        # from the east cross aisle.
-        self.rack_row(3.0, 16.0, 2.5)
-        self.rack_row(3.0, 16.0, 6.5)
-        self.box((2.5, 4.5, 0.08), (0.5, 1.5, 0.08), "steel")
-        for y in (3.0, 4.5, 6.0):
-            self.box((2.5, y, 1.3), (0.04, 0.04, 1.3), "rack_upright")
-        for z in (0.85, 1.7, 2.55):
-            self.box((2.5, 4.5, z), (0.03, 1.5, 0.05), "rack_beam")
-        for y in (3.4, 4.5, 5.6):
-            self.box((2.5, y, 0.4), (0.42, 0.5, 0.24), "carton_dark")
-            self.box((2.5, y, 1.2), (0.42, 0.45, 0.3), "carton")
-        # South production line: conveyor plus three machining cells.
-        self.conveyor(4.5, 16.0, -2.8)
-        for x in (6.0, 10.0, 14.0):
-            self.machine(x, -6.2)
+        # North storage maze (x 4..24, y 1.5..10). A south rack row closes it
+        # off from the main aisle except for a 3 m entrance at the east end;
+        # four north-south rack rows alternate between the south row and the
+        # north wall, leaving 3 m aisles and 3 m turn openings (the old 2.1 m
+        # maze openings were too tight for the Go1 to turn through).
+        self.rack(1.5, 10.0, 4.5, axis="y")                 # west boundary
+        self.rack(5.0, 21.0, 2.0, axis="x")                 # south boundary
+        self.rack(2.5, 7.0, 20.5, axis="y")                 # R1, open to the north
+        self.rack(5.5, 10.0, 16.5, axis="y")                # R2, open to the south
+        self.rack(2.5, 7.0, 12.5, axis="y")                 # R3
+        self.rack(5.5, 10.0, 8.5, axis="y")                 # R4
+        # South production line: conveyor plus four machining cells.
+        self.conveyor(4.5, 19.0, -2.6)
+        for x in (6.0, 10.0, 14.0, 18.0):
+            self.machine(x, -6.0)
         # Start area: dock pallets, packing benches, a parked forklift.
-        self.pallet(-1.6, 5.8, layers=3, wrapped=True)
-        self.pallet(0.0, 5.8, layers=2)
-        self.pallet(-1.6, 3.8, layers=2, wrapped=True)
-        self.workbench(0.3, -6.7)
-        self.workbench(2.4, -6.7)
-        self.forklift(-0.8, -4.2)
-        self.pallet(19.8, -6.4, layers=2, wrapped=True)
-        self.pallet(19.8, 6.4, layers=3)
-        self.charger(20.8, 0.0)
-        # Floor markings: main aisle, cross aisle, picking aisle, walkway.
-        for y in (-2.0, 2.0):
-            self.floor_line(-2.0, y, 18.0 if y > 0 else 20.5, y)
-        self.floor_line(16.6, 2.0, 16.6, 7.3)
-        self.floor_line(17.0, -2.0, 17.0, -7.3)
-        for y in (3.2, 5.8):
-            self.floor_line(3.0, y, 16.6, y)
-        for x in np.arange(-1.5, 18.0, 1.2):
-            self.floor_line(x, 0.0, x + 0.6, 0.0, "white", 0.08)         # centre dashes
-        for k, x in enumerate(np.arange(-2.6, 2.4, 0.5)):                   # zebra crossing
-            self.floor_line(x, -2.0, x + 0.25, -2.0, "green" if k % 2 else "white", 0.5)
-        self.hazard_frame(-1.8, -5.0, 0.6, -3.4)                            # forklift bay
+        self.pallet(-1.8, 8.6, layers=3, wrapped=True)
+        self.pallet(-0.2, 8.6, layers=2)
+        self.pallet(1.4, 8.6, layers=3, wrapped=True)
+        self.pallet(2.8, 6.0, layers=2, yaw90=True)
+        self.workbench(0.3, -7.4)
+        self.workbench(2.4, -7.4)
+        self.forklift(-0.8, -4.6)
+        self.pallet(22.8, -7.2, layers=2, wrapped=True)
+        self.charger(23.8, -0.4)
+        # Unmapped clutter: the global plan goes straight through these until
+        # the laser sees them; the local planner has to steer around.
+        self.pallet(10.0, 0.9, layers=2, mapped=False)       # main aisle, north side
+        for x in (13.5, 14.2, 14.9):                         # cone line, south side
+            self.cone(x, -1.0)
+        self.dropped_cartons(23.5, 5.0)                      # entrance aisle
+        self.cart(13.45, 4.5)                                # aisle 2, against R3
+        self.dropped_cartons(11.6, 4.0)                      # aisle 3, against R3
+        self.cone(5.5, 6.5)                                  # aisle 4
+        # Floor markings: main aisle edges, centre dashes, zebra crossing.
+        self.floor_line(-2.0, 1.35, 21.0, 1.35)
+        self.floor_line(-2.0, -2.05, 24.0, -2.05)
+        for x in np.arange(-1.5, 23.0, 1.2):
+            self.floor_line(x, -0.35, x + 0.6, -0.35, "white", 0.08)
+        for k, x in enumerate(np.arange(-2.6, 2.4, 0.5)):
+            self.floor_line(x, -2.05, x + 0.25, -2.05, "green" if k % 2 else "white", 0.5)
+        self.hazard_frame(-1.8, -5.4, 0.6, -3.8)                            # forklift bay
+        self.hazard_frame(21.1, 1.5, 23.9, 2.5)                             # maze entrance
         self.lamps()
 
 
 def build_factory(model):
     spec = robot_spec(model)
-    spec.stat.center = [9.0, 0.0, 0.5]
-    spec.stat.extent = 12.0
+    spec.stat.center = [10.5, 1.0, 0.5]
+    spec.stat.extent = 14.0
     spec.visual.headlight.ambient = [0.32, 0.32, 0.32]
     spec.visual.headlight.diffuse = [0.35, 0.35, 0.35]
     spec.visual.quality.shadowsize = 4096
