@@ -1,0 +1,8 @@
+Go1 MuJoCo factory navigation run — 2026-10-19
+Command: ./scripts/start_demo.sh mujoco_viewer:=false rviz:=false
+Scene: go1_factory.mjb (rebuilt Go1 verified bit-identical to go1_corridor.mjb under the policy)
+Goal: (6.0, 4.5, yaw 3.1416) via main aisle -> east cross aisle -> picking aisle
+lifecycle_guard: "Nav2 bringup healthy"
+Feedback distance: 28.10 m -> 3.97 m over ~37 s of navigation, no recovery behaviours
+Result: SUCCEEDED; final odom (6.59, 4.43)
+Nav2 limits: max_vel_x 0.8 m/s, max_vel_theta 1.0 rad/s

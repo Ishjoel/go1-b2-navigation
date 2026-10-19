@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<robot name="go2" xmlns:xacro="http://www.ros.org/wiki/xacro">
+ <xacro:include filename="$(find unitree_go2_description)/urdf/unitree_go2_robot.xacro"/>
+ <ros2_control name="Go2GazeboSystem" type="system">
+  <hardware><plugin>gz_ros2_control/GazeboSimSystem</plugin></hardware>
+<joint name="lf_hip_joint"><command_interface name="position"/><state_interface name="position"><param name="initial_value">0.0</param></state_interface><state_interface name="velocity"/></joint>
+<joint name="lf_upper_leg_joint"><command_interface name="position"/><state_interface name="position"><param name="initial_value">0.9</param></state_interface><state_interface name="velocity"/></joint>
+<joint name="lf_lower_leg_joint"><command_interface name="position"/><state_interface name="position"><param name="initial_value">-1.8</param></state_interface><state_interface name="velocity"/></joint>
+<joint name="rf_hip_joint"><command_interface name="position"/><state_interface name="position"><param name="initial_value">0.0</param></state_interface><state_interface name="velocity"/></joint>
+<joint name="rf_upper_leg_joint"><command_interface name="position"/><state_interface name="position"><param name="initial_value">0.9</param></state_interface><state_interface name="velocity"/></joint>
+<joint name="rf_lower_leg_joint"><command_interface name="position"/><state_interface name="position"><param name="initial_value">-1.8</param></state_interface><state_interface name="velocity"/></joint>
+<joint name="lh_hip_joint"><command_interface name="position"/><state_interface name="position"><param name="initial_value">0.0</param></state_interface><state_interface name="velocity"/></joint>
+<joint name="lh_upper_leg_joint"><command_interface name="position"/><state_interface name="position"><param name="initial_value">0.9</param></state_interface><state_interface name="velocity"/></joint>
+<joint name="lh_lower_leg_joint"><command_interface name="position"/><state_interface name="position"><param name="initial_value">-1.8</param></state_interface><state_interface name="velocity"/></joint>
+<joint name="rh_hip_joint"><command_interface name="position"/><state_interface name="position"><param name="initial_value">0.0</param></state_interface><state_interface name="velocity"/></joint>
+<joint name="rh_upper_leg_joint"><command_interface name="position"/><state_interface name="position"><param name="initial_value">0.9</param></state_interface><state_interface name="velocity"/></joint>
+<joint name="rh_lower_leg_joint"><command_interface name="position"/><state_interface name="position"><param name="initial_value">-1.8</param></state_interface><state_interface name="velocity"/></joint>
+ </ros2_control>
+ <link name="navigation_lidar"/>
+ <joint name="navigation_lidar_mount" type="fixed"><parent link="base_link"/><child link="navigation_lidar"/><origin xyz="0 0 0.2" rpy="0 0 0"/></joint>
+ <gazebo reference="navigation_lidar"><sensor name="navigation_lidar" type="gpu_lidar">
+  <always_on>true</always_on><update_rate>15</update_rate><topic>/scan</topic><gz_frame_id>navigation_lidar</gz_frame_id>
+  <lidar><scan><horizontal><samples>720</samples><min_angle>-3.14159265</min_angle><max_angle>3.14159265</max_angle></horizontal></scan><range><min>0.12</min><max>20</max><resolution>0.01</resolution></range></lidar>
+ </sensor></gazebo>
+</robot>

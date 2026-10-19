@@ -1,0 +1,57 @@
+/**:
+  ros__parameters:
+    gait:
+      com_x_translation: 0.0
+      knee_orientation: '><'
+      max_angular_velocity_z: 0.6
+      max_linear_velocity_x: 0.35
+      max_linear_velocity_y: 0.15
+      nominal_height: 0.43
+      odom_scaler: 1.0
+      pantograph_leg: false
+      stance_depth: 0.0
+      stance_duration: 0.3
+      swing_height: 0.06
+    joints_map:
+      left_front:
+      - LF_HAA_joint
+      - LF_HFE_joint
+      - LF_KFE_joint
+      - LF_FOOT_fixed
+      left_hind:
+      - LH_HAA_joint
+      - LH_HFE_joint
+      - LH_KFE_joint
+      - LH_FOOT_fixed
+      right_front:
+      - RF_HAA_joint
+      - RF_HFE_joint
+      - RF_KFE_joint
+      - RF_FOOT_fixed
+      right_hind:
+      - RH_HAA_joint
+      - RH_HFE_joint
+      - RH_KFE_joint
+      - RH_FOOT_fixed
+    links_map:
+      base: base
+      left_front:
+      - LF_HIP
+      - LF_THIGH
+      - LF_SHANK
+      - LF_FOOT
+      left_hind:
+      - LH_HIP
+      - LH_THIGH
+      - LH_SHANK
+      - LH_FOOT
+      right_front:
+      - RF_HIP
+      - RF_THIGH
+      - RF_SHANK
+      - RF_FOOT
+      right_hind:
+      - RH_HIP
+      - RH_THIGH
+      - RH_SHANK
+      - RH_FOOT

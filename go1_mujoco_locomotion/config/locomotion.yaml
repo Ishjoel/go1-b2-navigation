@@ -1,0 +1,46 @@
+# Go1 运动层参数（全部可用 ros2 param 覆盖）
+#
+# ★ 多数参数**不要动**：它们与训练时的策略一一对应，改了不会报错，
+#   只会让机器人走样（这是本项目反复踩过的"不报错只变差"类问题）。
+#   真正需要按你的场景调的只有下面标了 [可调] 的几项。
+
+go1_locomotion:
+  ros__parameters:
+    # ---------------- 资源路径（默认随包安装，一般不用改）----------------
+    # 模型是自包含的 .mjb（含 mesh 与场景几何），不依赖任何外部资源目录
+    # scene: <share>/config/go1_corridor.mjb（节点默认值；workshop_navigation 启动时传入 go1_factory.mjb 或 go1_maze.mjb）
+    # policy_weights: <share>/config/go1_policy_weights.npz
+    # obs_normalizer: <share>/config/go1_obs_normalizer.npz
+
+    # ---------------- 接口 ----------------
+    cmd_vel_topic: "cmd_vel"          # [可调] 与你 Nav2 的输出对齐
+    odom_topic: "odom"                # [可调]
+    scan_topic: "scan"                # [可调]
+    joint_states_topic: "joint_states"
+    odom_frame: "odom"                # [可调] 与你 Nav2 的 global frame 对齐
+    base_frame: "base_link"           # [可调] 与你 URDF 的 base 对齐
+    publish_tf: true                  # [可调] 若别处已发 odom->base_link 就设 false
+    mujoco_viewer: false              # [可调] 打开真实 MuJoCo 模型实时窗口
+    viewer_follow: true               # [可调] 窗口相机跟随机身
+
+    # ---------------- 安全限幅 ----------------
+    cmd_timeout: 0.5                  # 多久收不到 cmd_vel 就归零停车
+    max_linear_x: 1.0                 # [可调] 策略能力上限约 1.0 m/s
+    max_angular_z: 1.2                # [可调] 策略能力上限约 1.0 rad/s
+
+    # ---------------- 激光 ----------------
+    laser_samples: 360                # [可调] 360 线，1° 分辨率
+    scan_rate: 10.0                   # [可调] 激光射线较耗 CPU；策略仍以 50 Hz 独立运行
+    laser_x: 0.19                     # [可调] 安装位（机体系）
+    laser_y: 0.00
+    laser_z: 0.20
+    laser_range: 10.0                 # [可调]
+    laser_min_range: 0.20
+
+    # ---------------- 仿真与策略（★ 不要改）----------------
+    # 这些必须与训练侧严格一致，改动会让策略失效
+    sim_dt: 0.004                     # 物理步长（MJCF 原生值）
+    substeps: 5                       # 每控制周期 5 步 -> 策略 50 Hz
+    kp: 35.0                          # MuJoCo 位置执行器增益
+    kd: 0.5                           # 关节阻尼
+    action_scale: 0.5                 # ctrl = action * scale + default_pose

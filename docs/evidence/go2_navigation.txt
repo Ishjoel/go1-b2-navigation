@@ -1,0 +1,9 @@
+Gazebo Harmonic / ROS 2 Jazzy / Unitree Go2
+
+The Gazebo odometry message uses frame_id=odom and child_frame_id=base_link. AMCL initial pose and robot spawn are both (-8, 0, 0). RViz Fixed Frame is map.
+
+Short localization check: goal (-4, 0), Nav2 result SUCCEEDED.
+Full aisle run: goal (6, 0), Nav2 result SUCCEEDED; feedback decreased from 10.32 m to 0 m.
+Dynamic obstacle run: spawned a solid 0.6 x 0.8 m box at (2, 0), then sent the robot from the far end to (-8, 0). The odometry path passed around it at approximately (-0.76, 0.99); Nav2 result SUCCEEDED. Final odometry was approximately (-7.70, 0.18, 0.245), within the configured 0.35 m goal tolerance.
+
+Nav2 and CHAMP linear limit: 0.5 m/s. Final status: STOPPED with fresh odometry. Scan frame navigation_lidar, 720 rays.

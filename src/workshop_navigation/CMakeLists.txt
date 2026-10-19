@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 3.8)
+project(workshop_navigation)
+find_package(ament_cmake REQUIRED)
+install(DIRECTORY launch config maps worlds rviz urdf DESTINATION share/${PROJECT_NAME})
+install(PROGRAMS scripts/runtime.py scripts/goal.py scripts/obstacle.py scripts/lifecycle_guard.py DESTINATION lib/${PROJECT_NAME})
+ament_package()

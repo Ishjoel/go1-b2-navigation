@@ -1,0 +1,115 @@
+<?xml version="1.0" ?>
+<!--
+  Gazebo Harmonic world for ANYmal C benchmarking simulation.
+
+  Key differences from default.world (Gazebo Classic):
+  - System plugins are declared explicitly at world level (required by Harmonic).
+  - gz-sim-sensors-system enables gpu_lidar and imu sensors.
+  - gz-sim-imu-system processes IMU sensor data.
+  - gz-sim-odometry-publisher-system publishes ground-truth odometry on
+      /model/anymal_c/odometry  (bridged → /odom/ground_truth by ros_gz_bridge).
+  - Ground-plane and sun are inlined (no model:// URIs needed for these primitives).
+  - The <state> and <gui> blocks from the Classic .world are dropped; gz-sim
+    handles GUI state internally.
+  - libgazebo_ros2_control.so and all Classic ROS plugins are gone; ros2_control
+    is loaded via gz_ros2_control/GazeboSimROS2ControlPlugin declared in the URDF.
+-->
+<sdf version="1.9">
+  <world name="default">
+
+    <!-- ── Harmonic system plugins ─────────────────────────────────────── -->
+    <!-- Physics: mandatory for any simulation -->
+    <plugin filename="gz-sim-physics-system"
+            name="gz::sim::systems::Physics"/>
+
+    <!-- UserCommands: enables spawn / delete / pose-set from ros_gz_sim -->
+    <plugin filename="gz-sim-user-commands-system"
+            name="gz::sim::systems::UserCommands"/>
+
+    <!-- SceneBroadcaster: streams scene state to gz-transport clients / GUI -->
+    <plugin filename="gz-sim-scene-broadcaster-system"
+            name="gz::sim::systems::SceneBroadcaster"/>
+
+    <!-- Sensors: activates gpu_lidar, camera, depth, etc.
+         ogre2 is the only render engine supported in Harmonic. -->
+    <plugin filename="gz-sim-sensors-system"
+            name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+
+    <!-- Imu: processes <sensor type="imu"> elements in the URDF -->
+    <plugin filename="gz-sim-imu-system"
+            name="gz::sim::systems::Imu"/>
+
+    <!-- ── Lighting ───────────────────────────────────────────────────── -->
+    <light name="sun" type="directional">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.1 0.1 0.1 1</specular>
+      <attenuation>
+        <range>1000</range>
+        <constant>0.9</constant>
+        <linear>0.01</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <direction>-0.5 0.5 -1</direction>
+    </light>
+
+    <!-- ── Ground plane ───────────────────────────────────────────────── -->
+    <model name="ground_plane">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>100 100</size>
+            </plane>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>100</mu>
+                <mu2>50</mu2>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+        <visual name="visual">
+          <cast_shadows>false</cast_shadows>
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>100 100</size>
+            </plane>
+          </geometry>
+          <material>
+            <!-- Harmonic built-in material URI -->
+            <ambient>0.8 0.8 0.8 1</ambient>
+            <diffuse>0.8 0.8 0.8 1</diffuse>
+            <specular>0.8 0.8 0.8 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ── Physics ────────────────────────────────────────────────────── -->
+    <gravity>0 0 -9.8</gravity>
+    <magnetic_field>6e-06 2.3e-05 -4.2e-05</magnetic_field>
+    <atmosphere type="adiabatic"/>
+    <physics name="default_physics" default="true" type="ode">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1</real_time_factor>
+      <real_time_update_rate>1000</real_time_update_rate>
+    </physics>
+
+    <!-- ── Scene ──────────────────────────────────────────────────────── -->
+    <scene>
+      <ambient>0.4 0.4 0.4 1</ambient>
+      <background>0.7 0.7 0.7 1</background>
+      <shadows>true</shadows>
+    </scene>
+
+  </world>
+</sdf>

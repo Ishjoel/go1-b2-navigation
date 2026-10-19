@@ -1,0 +1,21 @@
+{
+  "status": {
+    "state": "STOPPED",
+    "odom_fresh": true,
+    "speed": 0.0
+  },
+  "final_odom_frame": "odom",
+  "final_child_frame": "base_link",
+  "final_position_m": [
+    -7.698607060715733,
+    0.17516664984622654,
+    0.24499813380831267
+  ],
+  "final_orientation_xyzw": [
+    -3.720346706717666e-07,
+    -2.2383311278294418e-07,
+    -0.11899064546621471,
+    0.9928953752996058
+  ],
+  "sim_stamp_s": 541.4
+}

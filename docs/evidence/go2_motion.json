@@ -1,0 +1,25 @@
+{
+  "odom_samples": 2685,
+  "scan_samples": 814,
+  "max_displacement_m": 1.8165210764515727,
+  "min_height_m": 0.23541862554010157,
+  "max_height_m": 0.24630703956861916,
+  "states": [
+    "MOVING",
+    "STOPPED"
+  ],
+  "start": [
+    -6.1049884097402565,
+    -0.00026253026080347937,
+    0.2364826476798646
+  ],
+  "end": [
+    -4.289561306559653,
+    0.014663272632054964,
+    0.24499873806212216
+  ],
+  "scan_frame": "navigation_lidar",
+  "scan_rays": 720,
+  "observed_seconds": 55.00940381800001,
+  "motion_verified": true
+}

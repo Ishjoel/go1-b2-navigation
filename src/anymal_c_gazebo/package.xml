@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>anymal_c_gazebo</name>
+  <version>0.1.0</version>
+  <description>CHAMP Gazebo Package</description>
+
+  <maintainer email="imsharma@protonmail.com">Mukul Sharma</maintainer>
+  <author>Juan Miguel Jimeno</author>
+
+  <license>BSD</license>
+
+    
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <build_depend>launch_ros</build_depend>
+  
+  <!-- Harmonic: ros_gz_sim replaces gazebo_ros / gazebo_ros_pkgs -->
+  <exec_depend>ros_gz_sim</exec_depend>
+  <!-- ros_gz_bridge: bridges gz-transport ↔ ROS 2 topics (LiDAR, IMU, odom, contacts) -->
+  <exec_depend>ros_gz_bridge</exec_depend>
+  <!-- gz_ros2_control: Harmonic replacement for gazebo_ros2_control -->
+  <depend>gz_ros2_control</depend>
+  <!-- ros_gz_image: efficient image bridging (optional, for future camera use) -->
+  <exec_depend>ros_gz_image</exec_depend>
+
+  <exec_depend>ros2_controllers</exec_depend>
+  <exec_depend>ros2_control</exec_depend>
+  
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+
+</package>

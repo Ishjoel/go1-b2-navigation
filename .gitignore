@@ -1,0 +1,9 @@
+build/
+install/
+log/
+.deps/
+__pycache__/
+*.pyc
+core
+.venv/
+src/champ/
