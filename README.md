@@ -2,7 +2,7 @@
 
 > 课程选题：**B2 车间通道通行** · 第一组：教晔廷（组长）、臧文韬、牛麒皓、张欣、苏奕婷
 >
-> 仓库：https://github.com/richardzang2006-svg/go1-b2-navigation · 汇报 PPT：[docs/B2车间通道通行_汇报.pptx](docs/B2车间通道通行_汇报.pptx)
+> 仓库：https://github.com/richardzang2006-svg/go1-b2-navigation · 汇报 PPT：[docs/B2车间通道通行_汇报.pptx](docs/B2车间通道通行_汇报.pptx) · 课程报告：[docs/B2车间通道通行_课程报告.pdf](docs/B2车间通道通行_课程报告.pdf)
 
 本项目让 **Unitree Go1 四足机器人** 在 MuJoCo 仿真的工厂车间中完成自主导航：从起点出发，穿过主通道，进入蛇形货架迷宫，一路避开地图上没有的临时障碍物，最终到达指定位置。
 
