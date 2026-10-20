@@ -1,6 +1,6 @@
 # 基于 MuJoCo 与 ROS 2 的 Unitree Go1 四足机器人工厂自主导航
 
-> 课程选题：**B2 车间通道通行** · 第一组：教晔廷（组长）、臧文韬、牛麒皓、张欣、苏奕婷
+> 课程选题：**B2 车间通道通行** · 第一组：教晔廷、臧文韬、牛麒皓、张欣、苏奕婷
 >
 > 仓库：https://github.com/richardzang2006-svg/go1-b2-navigation · 汇报 PPT：[docs/B2车间通道通行_汇报.pptx](docs/B2车间通道通行_汇报.pptx) · 课程报告：[docs/B2车间通道通行_课程报告.pdf](docs/B2车间通道通行_课程报告.pdf)
 
